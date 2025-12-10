@@ -9,6 +9,24 @@ This project provides tools to:
 - Generate captions for spectrogram slices using AI models
 - Compare original vs reconstructed spectrograms with quality metrics
 
+## Quick Start
+
+For the simplest workflow, use the interactive `main.py` script which combines spectrogram generation and captioning in one step:
+
+```bash
+python main.py
+```
+
+This will prompt you for:
+- Input audio file or folder
+- Output folder
+- Artist name (optional)
+- Song title (optional)
+
+The script automatically generates both spectrogram images and MuQ-based captions.
+
+**Sample data included:** `sample_data/Gex.mp3` - try it out!
+
 ## Installation
 
 ```bash
@@ -16,6 +34,19 @@ pip install librosa numpy soundfile opencv-python torch transformers tinytag muq
 ```
 
 ## Tools
+
+### main.py
+
+Interactive wrapper that combines `audio_converter.py` and `muq_captioner.py` into a single automated pipeline. Ideal for quickly generating training datasets.
+
+```bash
+python main.py
+```
+
+**Workflow:**
+1. Prompts for input/output paths and metadata
+2. Generates 1024x1024 spectrogram images (Phase 1)
+3. Generates MuQ-based captions with optional artist/title prefix (Phase 2)
 
 ### audio_converter.py
 
@@ -43,6 +74,7 @@ python audio_converter.py ./output_images -o reconstructed.wav --decode
 - Encodes magnitude (dB) in red channel, phase (cos/sin) in green/blue
 - 16-bit PNG preserves full dynamic range
 - Lanczos4 interpolation for resizing
+- Slices audio into square chunks (1025x1025 STFT bins) before resizing
 
 ### compare_spectrograms.py
 
@@ -60,12 +92,12 @@ python compare_spectrograms.py ./original_spectrograms ./reconstructed_spectrogr
 
 **Output:**
 - Side-by-side comparison images (Original | Reconstructed | Diff x50)
-- Per-slice PSNR scores
+- Per-slice PSNR scores (16-bit scale)
 - Average PSNR across all slices
 
 ### narrative_captioner.py
 
-Generates detailed natural language descriptions using Qwen2-Audio-7B.
+Generates detailed natural language descriptions using Qwen2-Audio-7B-Instruct.
 
 ```bash
 python narrative_captioner.py ./audio_files -o ./training_captions
@@ -82,7 +114,7 @@ python narrative_captioner.py ./audio_files -o ./training_captions
 
 ### muq_captioner.py
 
-Generates terse tag-style captions using MuQ-MuLan similarity matching.
+Generates terse tag-style captions using MuQ-MuLan similarity matching against AudioSet and MagnaTagATune vocabularies.
 
 ```bash
 python muq_captioner.py ./audio_files -o ./training_captions
@@ -96,25 +128,35 @@ python muq_captioner.py ./audio_files -o ./training_captions
 | `--hop` | Hop length (default: 512) |
 
 **Features:**
-- Prompts for optional artist/title prefix
-- Matches audio against 300+ curated tags across Genre, Instrument, Mood, and Texture categories
-- Includes BPM detection
-- Output format: `"Rock, Heavy Metal, Distorted Guitar, Drums, Aggressive, Dark, 140 BPM"`
+- Prompts for optional artist/title prefix (e.g., "style of Artist Name")
+- Matches audio against AudioSet ontology (instruments, genres, moods)
+- MagnaTagATune texture descriptors
+- BPM detection via librosa
+- Output format: `"A Dark Rock track featuring Electric Guitar. Characterized as heavy. 120 BPM."`
 
 ## Workflow Example
 
+### Automated (Recommended)
+
+```bash
+python main.py
+# Follow prompts to generate spectrograms + captions in one step
+```
+
+### Manual
+
 1. **Convert audio to spectrograms:**
    ```bash
-   python audio_converter.py ./music -o ./spectrograms
+   python audio_converter.py ./sample_data -o ./spectrograms
    ```
 
 2. **Generate captions (choose one):**
    ```bash
-   # Detailed prose descriptions
-   python narrative_captioner.py ./music -o ./captions
+   # Detailed prose descriptions (~16GB VRAM)
+   python narrative_captioner.py ./sample_data -o ./captions
 
-   # Terse tag-style captions
-   python muq_captioner.py ./music -o ./captions
+   # Terse tag-style captions (~8GB VRAM)
+   python muq_captioner.py ./sample_data -o ./captions
    ```
 
 3. **Train your diffusion model** on the image/caption pairs
@@ -129,12 +171,26 @@ python muq_captioner.py ./audio_files -o ./training_captions
    python compare_spectrograms.py ./spectrograms ./generated_spectrograms
    ```
 
+## Project Structure
+
+```
+wav_diff/
+├── main.py                 # Interactive pipeline (images + captions)
+├── audio_converter.py      # Audio <-> spectrogram conversion
+├── compare_spectrograms.py # PSNR comparison tool
+├── narrative_captioner.py  # Qwen2-Audio prose captions
+├── muq_captioner.py        # MuQ-MuLan tag-style captions
+├── sample_data/            # Sample audio files for testing
+│   └── Gex.mp3
+└── README.md
+```
+
 ## Requirements
 
 - Python 3.8+
 - PyTorch with CUDA (recommended for captioners)
-- ~16GB VRAM for Qwen2-Audio-7B
-- ~8GB VRAM for MuQ-MuLan
+- ~16GB VRAM for Qwen2-Audio-7B (narrative_captioner.py)
+- ~8GB VRAM for MuQ-MuLan (muq_captioner.py, main.py)
 
 ## License
 
