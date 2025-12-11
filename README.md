@@ -30,23 +30,41 @@ The script automatically generates both spectrogram images and MuQ-based caption
 ## Installation
 
 ```bash
-pip install librosa numpy soundfile opencv-python torch transformers tinytag muq
+pip install -r requirements.txt
+```
+
+Or install manually:
+```bash
+pip install librosa numpy soundfile opencv-python torch transformers muq requests
 ```
 
 ## Tools
 
 ### main.py
 
-Interactive wrapper that combines `audio_converter.py` and `muq_captioner.py` into a single automated pipeline. Ideal for quickly generating training datasets.
+Wrapper that combines `audio_converter.py` and `muq_captioner.py` into a single automated pipeline. Ideal for quickly generating training datasets.
 
+**Interactive mode:**
 ```bash
 python main.py
 ```
 
+**Non-interactive mode (for scripting):**
+```bash
+python main.py -i ./audio -o ./dataset
+python main.py -i song.mp3 -o ./output --artist "Artist Name" --title "Song Title"
+```
+
+| Argument | Description |
+|----------|-------------|
+| `-i, --input` | Input audio file or folder |
+| `-o, --output` | Output folder for spectrograms and captions |
+| `--artist` | Artist name for caption prefix (optional) |
+| `--title` | Song title for caption prefix (optional) |
+
 **Workflow:**
-1. Prompts for input/output paths and metadata
-2. Generates 1024x1024 spectrogram images (Phase 1)
-3. Generates MuQ-based captions with optional artist/title prefix (Phase 2)
+1. Generates 1024x1024 spectrogram images (Phase 1)
+2. Generates MuQ-based captions with optional artist/title prefix (Phase 2)
 
 ### audio_converter.py
 

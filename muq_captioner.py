@@ -7,7 +7,8 @@ import json
 import os
 from pathlib import Path
 from typing import List, Dict, Union
-from tinytag import TinyTag
+# Audio processing constants (must match audio_converter.py)
+SAMPLE_RATE = 44100
 
 # Try to import MuQ
 try:
@@ -119,12 +120,12 @@ class StandardizedCaptioner:
         
         for f in files:
             try:
-                y, sr = librosa.load(f, sr=24000)
+                y, sr = librosa.load(f, sr=SAMPLE_RATE)
                 y, _ = librosa.effects.trim(y, top_db=20)
                 if len(y) == 0: continue
-                
-                target_duration = ((n_fft // 2 + 1) * hop_length) / 44100
-                chunk_samples = int(target_duration * 24000)
+
+                # Chunk size matches audio_converter.py slicing
+                chunk_samples = (n_fft // 2 + 1) * hop_length
                 num_chunks = len(y) // chunk_samples
                 
                 print(f"Processing {f.name}...")
