@@ -9,6 +9,8 @@ This project provides tools to:
 - Generate captions for spectrogram slices using AI models
 - Compare original vs reconstructed spectrograms with quality metrics
 
+The proposed next version uses continuous audio storage and pretrained audio latents. See the [architecture and implementation plan](ARCHITECTURE_PLAN.md) for milestones and the [technical review](IMPROVEMENT_STRATEGY.md) for known flaws in the current implementation. These documents describe planned work; the tools below still use the existing image pipeline.
+
 ## Quick Start
 
 For the simplest workflow, use the interactive `main.py` script which combines spectrogram generation and captioning in one step:
